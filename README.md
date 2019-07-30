@@ -14,6 +14,7 @@ srun -N 1 -c 1 --mem 1G -t 3:00:00 -p interactive --pty /bin/bash
 -->
 
 * Once the job has started, clone a github repository with files we will use today:
+
 ```bash
 git clone https://github.com/chrisLanderson/lab_meeting_07_31_19
 cd lab_meeting_07_31_19

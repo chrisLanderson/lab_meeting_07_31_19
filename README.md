@@ -23,6 +23,7 @@ gzip -d contigs.fa.gz
 * Everyone comfortable transferring data to and from the cluster? Remember: username@**xfer**.discovery.neu.edu 
 
 * There is not very much software made available through the cluster, but lets look at how to see what software is available and how to load it. You might not be doing this often, as we are going to have our group's software installed elsewhere - Do we need to discuss this now? - but its good to be aware of:
+
 ```bash
 module avail
 
@@ -94,13 +95,14 @@ sacct -u <username> --format=jobid,jobname,elapsed,state,maxrss,maxvmsize
 
 * Now that we have created the bowtie2 index, lets submit a job to align one of the fastq files to the contig index - 1 node, 4 cores/threads, 2 GB RAM, and limit the job to 1 hour.
 
-```
+```bash
 ls fastq_dir
 
 #commands: 
 module load gcc/7.2.0
 /home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 
 
+nano bt2_job.sh 
 vim bt2_job.sh
 
 #example:
@@ -128,6 +130,7 @@ sacct -j <job_id> --format=jobid,jobname,elapsed,state,maxrss,maxvmsize
 * How can we run bowtie2 for all 8 samples?
 
 * Is this the best approach?
+
 ```bash
 #!/bin/bash
 #SBATCH --nodes=1

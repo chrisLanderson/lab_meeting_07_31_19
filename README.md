@@ -43,6 +43,12 @@ module list
 First, we need to create a bowtie index of the genome. We are going to use the software avaialble in Guangyu's home directory for now. Lets create a batch script to submit this as a job to the cluster. You can use nano, vim, or another text editor. Lets create a job with 1 node, 1 cpu core, 4 GB of RAM, and runs for 1 hour. An example script is below, but try to complete this without looking.
 
 ```bash
+# commands:
+module load gcc/7.2.0
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2-build contigs.fa contigs_bt2
+
+# create a new file with your go to text editor
+nano bt2_job.sh
 vim bt2_job.sh
 
 # man sbatch or sbatch -h if you forget the parameters
@@ -66,6 +72,8 @@ sbatch bt2_job.sh
 
 squeue -u <username>
 
+scancel <job_id> # if you want to cancel the job
+
 ls -lhrt 
 ```
 
@@ -82,6 +90,86 @@ sacct -j <job_id> --format=jobid,jobname,maxrss,elapsed,state
 
 sacct -u <username> --format=jobid,jobname,maxrss,elapsed,state
 ```
+
+* Now that we have created the bowtie2 index, lets submit a job to align one of the fastq files to the contig index - 1 node, 4 cores/threads, 2 GB RAM, and limit the job to 1 hour.
+
+```
+ls fastq_dir
+
+#commands: 
+module load gcc/7.2.0
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 
+
+vim bt2_job.sh
+
+#example:
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=1:00:00
+#SBATCH --mem=2000
+#SBATCH --partition general
+
+module load gcc/7.2.0
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 -threads 4 -x contigs_bt2 -1 fastq_dir/S1_R1.fastq -2 fastq_dir/S1_R2.fastq -S S1.sam
+```
+
+Submit and monitor the progress of the job. After it is completed, view the stdout and stderr messages. Check the resources used for the job so we can better guide our resource allocation for the remainder of the jobs.
+
+
+* How can we run bowtie2 for all 8 samples?
+
+* Is this the best approach?
+```bash
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=1:00:00
+#SBATCH --mem=500
+#SBATCH --partition general
+
+module load gcc/7.2.0
+
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/S1_R1.fastq -2 fastq_dir/S1_R2.fastq -S S1.sam
+
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/S2_R1.fastq -2 fastq_dir/S_R2.fastq -S S2.sam
+
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/S3_R1.fastq -2 fastq_dir/S3_R2.fastq -S S3.sam
+
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/S4_R1.fastq -2 fastq_dir/S4_R2.fastq -S S4.sam
+
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/S5_R1.fastq -2 fastq_dir/S5_R2.fastq -S S5.sam
+
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/S6_R1.fastq -2 fastq_dir/S6_R2.fastq -S S6.sam
+
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/S7_R1.fastq -2 fastq_dir/S7_R2.fastq -S S7.sam
+
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/S8_R1.fastq -2 fastq_dir/S8_R2.fastq -S S8.sam
+
+```
+
+How would you write a loop to do the above?
+
+```bash
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=1:00:00
+#SBATCH --mem=500
+#SBATCH --partition general
+
+module load gcc/7.2.0
+
+for r1 in fastq_dir/*R1.fastq; do
+  sample_id="$(basename $r1 | cut -d "_" -f 1)"
+  /home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/"$sample_id"_R1.fastq -2 fastq_dir/"$sample_id"_R2.fastq -S "$sample_id".sam 
+done
+
+```
+
+Given how short this mapping job is, a loop is likley the correct decision. However, for long jobs where we want to iterate over something, like files or genomes, and perform a common command, we could consider job arrays.
+
+
 
 
 

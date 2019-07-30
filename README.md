@@ -17,6 +17,7 @@ srun -N 1 -c 1 --mem 1G -t 3:00:00 -p interactive --pty /bin/bash
 ```bash
 git clone https://github.com/chrisLanderson/lab_meeting_07_31_19
 cd lab_meeting_07_31_19
+gzip -d contigs.fa.gz
 ```
 
 * Everyone comfortable transferring data to and from the cluster? Remember: username@**xfer**.discovery.neu.edu 
@@ -86,9 +87,9 @@ The most effective way of figuring out how much resources a job needs is to subm
 ```bash
 sacct -j <job_id> -l
 
-sacct -j <job_id> --format=jobid,jobname,maxrss,elapsed,state
+sacct -j <job_id> --format=jobid,jobname,elapsed,state,maxrss,maxvmsize
 
-sacct -u <username> --format=jobid,jobname,maxrss,elapsed,state
+sacct -u <username> --format=jobid,jobname,elapsed,state,maxrss,maxvmsize
 ```
 
 * Now that we have created the bowtie2 index, lets submit a job to align one of the fastq files to the contig index - 1 node, 4 cores/threads, 2 GB RAM, and limit the job to 1 hour.
@@ -111,10 +112,17 @@ vim bt2_job.sh
 #SBATCH --partition general
 
 module load gcc/7.2.0
-/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 -threads 4 -x contigs_bt2 -1 fastq_dir/S1_R1.fastq -2 fastq_dir/S1_R2.fastq -S S1.sam
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/S1_R1.fastq -2 fastq_dir/S1_R2.fastq -S S1.sam
 ```
 
 Submit and monitor the progress of the job. After it is completed, view the stdout and stderr messages. Check the resources used for the job so we can better guide our resource allocation for the remainder of the jobs.
+
+```bash
+squeue -u <username>
+
+sacct -j <job_id> --format=jobid,jobname,elapsed,state,maxrss,maxvmsize
+
+```
 
 
 * How can we run bowtie2 for all 8 samples?
@@ -169,7 +177,27 @@ done
 
 Given how short this mapping job is, a loop is likley the correct decision. However, for long jobs where we want to iterate over something, like files or genomes, and perform a common command, we could consider job arrays.
 
+A job array is a collection of similar independent jobs which are submitted together to one of the Linux cluster job schedulers using a job template script. The advantage of using a job array is that many similar jobs can be submitted using a single job template script, and the jobs will run independently as they are able to obtain resources on the compute cluster.
+
+The $SLURM_ARRAY_TASK_ID variable  is incremented for each job in the array.
+
+The number of jobs in the array is indiciated with the --array parameter in the batch script.
 
 
+```bash
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=4
+#SBATCH --time=1:00:00
+#SBATCH --mem=500
+#SBATCH --partition general
+#SBATCH --array=1-8
 
+r1="$(ls fastq_dir/*R1.fastq | head -n $SLURM_ARRAY_TASK_ID | tail -n 1)"
+
+sample_id="$(basename $r1 | cut -d "_" -f 1)"
+
+/home/li.gua/usr/bowtie2/2.3.5.1/bin/bowtie2 --threads 4 -x contigs_bt2 -1 fastq_dir/"$sample_id"_R1.fastq -2 fastq_dir/"$sample_id"_R2.fastq -S "$sample_id".sam 
+
+```
 

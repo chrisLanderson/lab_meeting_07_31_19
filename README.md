@@ -86,7 +86,7 @@ ls -lhrt
 
 Answer: we don’t. Not until we’ve tried it ourselves at least once. We’ll need to benchmark our job and experiment with it before we know how much it needs in the way of resources.
 
-The most effective way of figuring out how much resources a job needs is to submit a test job, and then ask the scheduler how many resources it used. A good rule of thumb is to ask the scheduler for more time and memory than your job can use. This value is typically two to three times what you think your job will need.
+The most effective way of figuring out the resources a job needs is to submit a test job, and then ask the scheduler how many resources it used. A good rule of thumb is to ask the scheduler for more time and memory than your job can use. This value is typically two to three times what you think your job will need.
 
 ```bash
 seff <job_id>

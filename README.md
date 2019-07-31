@@ -197,6 +197,8 @@ The number of jobs in the array is indiciated with the --array parameter in the 
 #SBATCH --partition general
 #SBATCH --array=1-8
 
+module load gcc/7.2.0
+
 r1="$(ls fastq_dir/*R1.fastq | head -n $SLURM_ARRAY_TASK_ID | tail -n 1)"
 
 sample_id="$(basename $r1 | cut -d "_" -f 1)"

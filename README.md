@@ -74,6 +74,8 @@ After creating a batch script, submit the job with sbatch, look at the progress 
 sbatch bt2_job.sh
 
 squeue -u <username>
+#or:
+qstat -u <username>
 
 scancel <job_id> # if you want to cancel the job
 
@@ -87,10 +89,11 @@ Answer: we don’t. Not until we’ve tried it ourselves at least once. We’ll 
 The most effective way of figuring out how much resources a job needs is to submit a test job, and then ask the scheduler how many resources it used. A good rule of thumb is to ask the scheduler for more time and memory than your job can use. This value is typically two to three times what you think your job will need.
 
 ```bash
+seff <job_id>
+
+# other ways:
 sacct -j <job_id> -l
-
 sacct -j <job_id> --format=jobid,jobname,elapsed,state,maxrss,maxvmsize
-
 sacct -u <username> --format=jobid,jobname,elapsed,state,maxrss,maxvmsize
 ```
 
@@ -123,7 +126,11 @@ Submit and monitor the progress of the job. After it is completed, view the stdo
 ```bash
 squeue -u <username>
 
-sacct -j <job_id> --format=jobid,jobname,elapsed,state,maxrss,maxvmsize
+#or:
+qstat -u <username>
+
+seff <job_id>
+
 
 ```
 
